@@ -9,25 +9,27 @@ run("Colors...", "foreground=black background=black selection=green");
 
 choices=newArray("Unprojected DV files: fast acquisition mode","Unprojected DV files: slow acquisition mode","Projected files","TIF files","Deconvolved DVs");
 Dialog.create("Set Channels");
-	Dialog.addNumber("Data channel number",1,0,0,"");
+	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs",1,0,0,"");
 	Dialog.addNumber("Reference channel number",1,0,0,"");
 	Dialog.addNumber("DAPI channel number",-1,0,0,"0=no DAPI; -1 is last channel");
-	Dialog.addNumber("Total channels",4,0,0,"");
+	Dialog.addNumber("Total channels",0,0,0,"0=read from metadata");
 	Dialog.addMessage("");
 	Dialog.addCheckbox("Change default parameter settings?",0);
 	Dialog.addCheckbox("Cropped cells?",0);
 Dialog.show();
-	DataCh=Dialog.getNumber();
+	DataCh=Dialog.getString();
 	RefCh=Dialog.getNumber();
 	DapiCh=Dialog.getNumber();
 	TotCh=Dialog.getNumber();
 	Change=Dialog.getCheckbox();
 	CroppedCells=Dialog.getCheckbox();
+
 if (((RefCh-DapiCh)*(DataCh-DapiCh)) == 0){
 	exit("Reference and Data channels should be different from DAPI channel");
 	beep();
 }
-crash
+
+
 
 Dialog.create("Change parameter settings");
 	Dialog.addNumber("Square size",7,0,0,"pixels");
