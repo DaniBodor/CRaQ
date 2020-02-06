@@ -256,6 +256,7 @@ function MEASURE_FUNCTION(){
 	}
 	roiNumber = roiManager("count");
 	Table.setColumn("ROI ", Array.getSequence(roiNumber);
+	// RESOLVE BY NOT RESETTING TABLE EACH TIME, NOT USING SET COLUMN, BUT USING SET. SEE https://wsr.imagej.net/macros/Sine_Cosine_Table2.txt
 
 	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
 		resArray = newArray(0);
