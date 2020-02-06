@@ -14,18 +14,27 @@ Dialog.create("Set Channels");
 	Dialog.addNumber("DAPI channel number",99,0,0,"large number --> last channel");
 	Dialog.addNumber("Total channels",0,0,0," use 0 to auto-detect");
 	Dialog.addMessage("");
+	Dialog.addNumber("Camera Bitdepth",12,0,0,"usually 12 or 16");
+	Dialog.addMessage("");
 	Dialog.addCheckbox("Change default parameter settings?",0);
 	Dialog.addCheckbox("Cropped cells?",0);
+	Dialog.addMessage("");
+	
 Dialog.show();
 	DataCh=Dialog.getString();
 	RefCh=Dialog.getNumber();
 	DapiCh=Dialog.getNumber();
 	TotCh=Dialog.getNumber();
+	CameraBitDepth=Dialog.getNumber();
 	Change=Dialog.getCheckbox();
 	CroppedCells=Dialog.getCheckbox();
 
 if (RefCh == DapiCh){
 	exit("Reference and Data channels should be different from DAPI channel");
+}
+SatPixVal = 1;
+for (b = 0; b < CameraBitDepth; b++) {
+	SatPixVal *= 2;
 }
 
 DataSplit = split(DataCh, ",,");	// using two commas to avoid errors when string ends with comma or consecutive commas are used
@@ -53,6 +62,7 @@ Dialog.create("Change parameter settings");
 	Dialog.addNumber("Min Centromere Size",4,0,2,"pixel");
 	Dialog.addNumber("Max Centromere Size",35,0,2,"pixel");
 	Dialog.addNumber("Threshold Factor",1.11,2,4,"pixel intensity");
+	Dialog.addNumber("Pixels are considered saturated at: "92,0,2,"% of camera saturation");
 	Dialog.addMessage("\nIf known, set the chromatic aberration of the reference channel compared to the data channel.");
 	Dialog.addNumber("Chromatic aberration (horizontal): ",0,0,2,"pixels to right");
 	Dialog.addNumber("Chromatic aberration (vertical): ",0,0,2,"pixels down");
@@ -64,6 +74,7 @@ if (Change == 1)
 	MinCentro=Dialog.getNumber();
 	MaxCentro=Dialog.getNumber();
 	OtsuUp=Dialog.getNumber();
+	Saturation = Dialog.getNumber() * SatPixVal / 100;
 	xCor=Dialog.getNumber();
 	yCor=Dialog.getNumber();
 if (MinCirc >= 1)				exit("Minimum circularity was set to" + MinCirc + ".\n Please enter a value between 0 and 1");
@@ -120,7 +131,9 @@ function INITIATING_FUNCTION(dir) {
 	print ("Minimum Centromere Size: ", MinCentro);
 	print ("Maximum Centromere Size: ", MaxCentro);
 	print ("Threshold Factor: ", OtsuUp);
-	print("Chromatic aberration correction: ("+xCor+","+yCor+") [(x,y) difference of reference compared to data]");
+	print ("Chromatic aberration correction: ("+xCor+","+yCor+") [(x,y) difference of reference compared to data]");
+	print ("CameraBitDepth: ", CameraBitDepth);
+	print ("Pixel Saturation at: ", Saturation, "arbitrary intensity units"
 	selectWindow("Log");
 	saveAs("Text",out+"_R"+Ch[0]+"D"+Ch[1]+"__logfile.txt");
 	print("\\Clear") ;
@@ -131,7 +144,8 @@ function INITIATING_FUNCTION(dir) {
 			sdir= dir+list[i];
 			list[i]=substring(list[i],0,lengthOf(list[i])-1);
 			slist= getFileList(sdir);
-			print(list[i]+"\t"+list[i]);
+//			print(list[i]+"\t"+list[i]);
+			Table.create("DataTable");
 			for (j=0; j<slist.length; j++) {
 				if (endsWith(slist[j], ".dv") || endsWith(slist[j], ".tif")){
 					Image = sdir+slist[j];
@@ -224,27 +238,36 @@ function MEASURE_FUNCTION(){
 	setAutoThreshold("Default");
 	run("Analyze Particles...", "size="+MinCentro+"-"+MaxCentro+" circularity="+MinCirc+"-1.00 show=Nothing exclude clear");
 
-	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
-		selectWindow(RMD[data_channels]);
-		for (l=0;l<nResults;l++) {
-			if (getResult("Feret", l)<MaxFeret){
-				x=round(getResult("XM", l));
-				y=round(getResult("YM", l));
-				cx=x-xCor;cy=y-yCor;
-				makeRectangle(x-corner, y-corner, SquareSize, SquareSize);
-				getStatistics(area, no, no, no);
+	for (l=0;l<nResults;l++) {
+		if (getResult("Feret", l)<MaxFeret){
+			selectWindow("Ref");
+			x=round(getResult("XM", l));
+			y=round(getResult("YM", l));
+			cx=x-xCor;cy=y-yCor;
+			makeRectangle(x-corner, y-corner, SquareSize, SquareSize);
+			getStatistics(area, no, minRef, no);
+			if (minRef>0 && area==(SquareSize*SquareSize)){
 				makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
-				getStatistics(no, mean, min, max);
-				if (min>0 && max<65000 && area==(SquareSize*SquareSize)){
-					if (max>0)	print (count+"\t"+max-min);
-					else		print (count+"\tND");
-					count++;
-					fillRect(cx-corner, cy-corner, SquareSize, SquareSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(min>0)"
-					makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
-					roiManager("Add");
+				fillRect(cx-corner, cy-corner, SquareSize, SquareSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(min>0)"
+				makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
+				roiManager("Add");
+			}
+		}
+	}
+
+				for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
+					resArray = newArray(0);
+					selectWindow(RDM[data_channels+2]);
+					roiManager("select", roiManager("count"));
+					getStatistics(no, DataMean, DataMin, DataMax);
+				
+					if (DataMax > Saturation)	resArray = Array.concat(resArray,"Saturated Pixel");
+					else						resArray = Array.concat(resArray,max-min);
 				}
 			}
 		}
+		Table.setColumn("Channel "+DataChArray[data_channels], resArray);
+
 	}
 	run("Close All");
 /*
