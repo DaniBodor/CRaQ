@@ -255,20 +255,21 @@ function MEASURE_FUNCTION(){
 		}
 	}
 
-				for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
-					resArray = newArray(0);
-					selectWindow(RDM[data_channels+2]);
-					roiManager("select", roiManager("count"));
-					getStatistics(no, DataMean, DataMin, DataMax);
-				
-					if (DataMax > Saturation)	resArray = Array.concat(resArray,"Saturated Pixel");
-					else						resArray = Array.concat(resArray,max-min);
-				}
-			}
+	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
+		resArray = newArray(0);
+		selectWindow(RDM[data_channels+2]);
+		for (roi = 0; roi < roiManager("count"); roi++) {
+			roiManager("select", roi);
+			getStatistics(no, DataMean, DataMin, DataMax);
+		
+			if (DataMax > Saturation)	resArray = Array.concat(resArray,"Saturated Pixel");
+			else						resArray = Array.concat(resArray,max-min);
 		}
-		Table.setColumn("Channel "+DataChArray[data_channels], resArray);
-
+	Table.setColumn("Channel "+DataChArray[data_channels], resArray)
 	}
+	
+	
+
 	run("Close All");
 /*
 	selectWindow("Data");
