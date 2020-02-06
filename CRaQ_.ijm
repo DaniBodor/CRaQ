@@ -94,8 +94,7 @@ function listFiles(dir) {
 		if(min<10)	min="0"+min;
 		print(y,m,dM+"\n"+h+":"+min);
 	}
-//	print("Filetype: unprojected DV Files, Fast acquisition mode");
-//	print("Method: Bandpass; minmax");
+
 	print("CRaQ_ Macro version: "+version);
 	print("Please visit http://uic.igc.gulbenkian.pt/micro-macros.htm for newest version of CRaQ_");
 	print("ImageJ version: "+getVersion);
@@ -130,7 +129,7 @@ function listFiles(dir) {
 					TotSl=nSlices;
 					run("Properties...", "unit=pixel pixel_width=1 pixel_height=1");
 					run("Rename...", "title=dvFile");
-					//if(nSlices>1)		run("Grouped ZProjector", "group=["+nSlices/TotCh+"] projection=[Max Intensity]");
+					
 					if(nSlices>TotCh)		run("Z Project...", "projection=[Max Intensity]");
 					else			run("Duplicate...", "title=PRJ duplicate");
 					run("Rename...", "title=PRJ");
@@ -147,14 +146,12 @@ function listFiles(dir) {
 					}
 					selectWindow("PRJ");
 					if(TotCh<TotSl){
-						//File.makeDirectory(out+"PRJ_"+list[i]);
 						saveAs("Tiff", out+slist[j]+"__PRJ.tif");
 					}
 					close();
 					print("\n=="+slist[j]);
 					measure();
 					if (roiManager("count")>0) {
-						//File.makeDirectory(out+"ROI_"+list[i]);
 						roiManager("Save",out+slist[j]+"__ROI.zip")
 						roiManager("Deselect");
 						roiManager("Delete");
@@ -211,9 +208,6 @@ function measure(){
 	if(DapiCh>0)	imageCalculator("AND", "Ref","Mask");
 	run("Invert");
 	if(is("Inverting LUT"))	run("Invert LUT");
-	//run("MultiThresholder", "otsu");
-	//getThreshold(lower, upper);
-	//setThreshold(lower, upper*OtsuUp);
 	setAutoThreshold("Default");
 	run("Analyze Particles...", "size="+MinCentro+"-"+MaxCentro+" circularity="+MinCirc+"-1.00 show=Nothing exclude clear");
 
@@ -250,47 +244,4 @@ function measure(){
 
 
 //####### VERSION UPDATES //####### VERSION UPDATES //####### VERSION UPDATES //####### VERSION UPDATES //####### VERSION UPDATES //####### 
-// v1.11 (Jan 2020):
-// fix incompatible plugins (for FiJi):
-//  - Grouped Z Projector --> Z Project
-//  - MultiThresholder --> setAutoThreshold
-
-// v1.10 (June 2019):
-// make available for quantifying over time (use a certain channel from a certain timepoint the reference)
-
-// v1.07 (30 Nov 2011):
-// included printing URL of newest version of CRaQ_ in logfile (in line 104).
-
-// v1.06 (25 may 2011):
-// included a different kind of DAPI thresholding for the case of cropped single cells. I did this by:
-// 1. adding line19 & line29 to pompt whether or not single cells are being analyzed
-// 2. added �&& CroppedCells==0� to line168 to ensure that normal pictures are still thresholded in the normal way
-// 3. added lines199-209 to do the thresholding in cropped cells (basically dapi is not blur-corrected and then the threshold is set to 2/3 of the autothreshold).
-
-// v1.05 (11 mar 2011):
-//fixed a bug in line 134, which didnt allow for analysis of single slice images (no ref or dapi images), by adding line 135
-
-// v1.04 (25 nov 2010):
-//added �if(nSlices>1)� to line 134, so that single slice images (already projected, single channel files) also work
-
-// v1.03 (08 nov 2010):
-// added a method to prevent cdentromeres that are too close to the side to be counted (i.e. if the square does not completely fit into the picture). I did this by:
-// 1. adding �exclude� to line 204 to exclude any particles found on the edges
-// 2. excluding squares that are smaller than the input squaresize by adding �&& area==SquareSize*SquareSize� to line 216
-// 3. added lines 212 and 213, which create a square that is not corrected for chromatic aberration, which will be the reference to see if the squaresize is correct. This because otherwise random point measurements will not necessarily correlate with actual point measurements
-// Due to point 3 (above), in pictures that are corrected for chromatic aberrations (or shifted for random measurements), I will count squares that are smaller than the input squaresize. However, in most cases this function is solely used for measuring random points rather than actually correcting chromatic aberrations and for that reason this is preferred.
-
-
-// v1.02 (16 oct 2010):		
-// removed �&& max>0� from line 214.
-// changed line 215 from 	print (count+"\t"+max-min);	-->		if (max>0)print (count+"\t"+max-min);	else print (count+"\tND");
-
-
-// v1.01 (1 sep 2010):		
-// fixed error between spot recognition and roiManager addition		|||	L218: 	makeRectangle(x,y,SquareSize, SquareSize);		-->	makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
-// changed version number to variable
-// added �&& max>0� to line 214 to exclude non-picture centromeres in the case of ChromAb corrector
-// added printing of ImageJ version into logfile
-
-
-
+// Check github initial commit for version updates from published version
