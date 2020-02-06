@@ -11,7 +11,7 @@ choices=newArray("Unprojected DV files: fast acquisition mode","Unprojected DV f
 Dialog.create("Set Channels");
 	Dialog.addNumber("Data channel number",1,0,0,"");
 	Dialog.addNumber("Reference channel number",1,0,0,"");
-	Dialog.addNumber("DAPI channel number",4,0,0,"enter 0 if no DAPI was used");
+	Dialog.addNumber("DAPI channel number",-1,0,0,"0=no DAPI; -1 is last channel");
 	Dialog.addNumber("Total channels",4,0,0,"");
 	Dialog.addMessage("");
 	Dialog.addCheckbox("Change default parameter settings?",0);
@@ -26,9 +26,8 @@ Dialog.show();
 if (((RefCh-DapiCh)*(DataCh-DapiCh)) == 0){
 	exit("Reference and Data channels should be different from DAPI channel");
 	beep();
-	}
 }
-
+crash
 
 Dialog.create("Change parameter settings");
 	Dialog.addNumber("Square size",7,0,0,"pixels");
