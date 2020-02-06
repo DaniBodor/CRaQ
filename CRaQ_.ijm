@@ -9,7 +9,7 @@ run("Colors...", "foreground=black background=black selection=green");
 
 choices=newArray("Unprojected DV files: fast acquisition mode","Unprojected DV files: slow acquisition mode","Projected files","TIF files","Deconvolved DVs");
 Dialog.create("Set Channels");
-	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs",1,0,0,"");
+	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs","1",1);
 	Dialog.addNumber("Reference channel number",1,0,0,"");
 	Dialog.addNumber("DAPI channel number",-1,0,0,"0=no DAPI; -1 is last channel");
 	Dialog.addNumber("Total channels",0,0,0,"0=read from metadata");
@@ -24,9 +24,19 @@ Dialog.show();
 	Change=Dialog.getCheckbox();
 	CroppedCells=Dialog.getCheckbox();
 
-if (((RefCh-DapiCh)*(DataCh-DapiCh)) == 0){
+if (RefCh == DapiCh){
 	exit("Reference and Data channels should be different from DAPI channel");
-	beep();
+}
+
+DataSplit = split(DataCh, ",,");	// using two commas to avoid errors when string ends with comma or consecutive commas are used
+DataChArray = newArray(DataSplit.length);
+for (i = 0; i < DataSplit.length; i++) {
+	DataChArray[i] = parseInt(DataSplit[i]);
+	print(DataChArray[i]);
+
+	if (isNaN(DataChArray[i])){
+		exit("" + DataSplit[i] + " detected as input for Data channel\n  Only integers are allowed in this field\n  Multiple inputs can be separated by using a comma (,)");
+	}
 }
 
 
