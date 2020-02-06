@@ -38,6 +38,9 @@ for (i = 0; i < DataSplit.length; i++) {
 	}
 }
 
+Ch=newArray(RefCh,DataCh,DapiCh);
+RDM=newArray("Ref","Data","Mask");
+
 
 
 Dialog.create("Change parameter settings");
@@ -52,7 +55,7 @@ Dialog.create("Change parameter settings");
 	Dialog.addNumber("Chromatic aberration (vertical): ",0,0,2,"pixels down");
 if (Change == 1) 
 	Dialog.show();		//####################keeps defaults if "Change default" is unchecked
-	SquareSize=Dialog.getNumber();
+	SquareSize=Dialog.getNumber();		corner=(SquareSize-1)/2;
 	MinCirc=Dialog.getNumber();
 	MaxFeret=Dialog.getNumber();
 	MinCentro=Dialog.getNumber();
@@ -60,14 +63,11 @@ if (Change == 1)
 	OtsuUp=Dialog.getNumber();
 	xCor=Dialog.getNumber();
 	yCor=Dialog.getNumber();
-if (MinCirc >= 1)			exit("Minimum circularity should be smaller than 1");
-if (MinCentro >= MaxCentro)		exit("Minimum centromere size should be smaller than maximum centromere size");
+if (MinCirc >= 1)				exit("Minimum circularity was set to" + MinCirc + ".\n Please enter a value between 0 and 1");
+if (MinCentro > MaxCentro)		exit("Minimum centromere size ("+MinCentro+") may not be larger than maximum centromere size ("+MaxCentro+")");
 
 
-corner=(SquareSize-1)/2;
 
-Ch=newArray(RefCh,DataCh,DapiCh);
-RDM=newArray("Ref","Data","Mask");
 
 dir = getDirectory("Choose Base Directory ");
 
@@ -78,7 +78,10 @@ File.makeDirectory(out);
 run("Close All");
 roiManager("reset");
 
-listFiles(dir);
+
+
+
+CEN_MEASURE(dir);
 
 if(File.exists(dir+"OUTPUT_"+File.separator+"OUTPUT_.txt")==1)		File.delete(dir+"OUTPUT_"+File.separator+"OUTPUT_.txt");
 if(File.exists(dir+"OUTPUT_"+File.separator+"PRJ_.txt")==1)			File.delete(dir+"OUTPUT_"+File.separator+"PRJ_.txt");
@@ -95,7 +98,7 @@ run("Close");
 
 
 ///////////////////////////FUNCTIONS///////////////////////////FUNCTIONS///////////////////////////FUNCTIONS///////////////////////////FUNCTIONS///////////////////////////
-function listFiles(dir) {
+function CEN_MEASURE(dir) {
 
 	print("\\Clear");
 	if(File.exists(getDirectory("macros")+File.separator+"PrintDateTime.txt")==1)		runMacro("PrintDateTime");
@@ -106,7 +109,7 @@ function listFiles(dir) {
 	}
 
 	print("CRaQ_ Macro version: "+version);
-	print("Please visit http://uic.igc.gulbenkian.pt/micro-macros.htm for newest version of CRaQ_");
+	print("Please visit https://github.com/DaniBodor/CRaQ for updates");
 	print("ImageJ version: "+getVersion);
 	print("Base Directory: ", dir);
 	print("Reference Channel: "+Ch[0]);
@@ -135,7 +138,7 @@ function listFiles(dir) {
 				if (endsWith(slist[j], ".dv") || endsWith(slist[j], ".tif")){
 					Image = sdir+slist[j];
 					run("Open...", "open=["+Image+"] view=[Standard ImageJ] stack_order=Default");
-					if TotCh == 0 (Stack.getDimensions(WIDTH,HEIGHT,   TotCh   ,Zdepth,Tframes));		// read total chanel info from Metadata; everything else unused
+					if (TotCh == 0) 		Stack.getDimensions(WIDTH,HEIGHT,   TotCh   ,Zdepth,Tframes);		// read total chanel info from Metadata; everything else unused
 					Deco=indexOf(getTitle,"D3D");
 					TotSlice=nSlices;
 					run("Properties...", "unit=pixel pixel_width=1 pixel_height=1");
@@ -147,7 +150,6 @@ function listFiles(dir) {
 					selectWindow("Image");
 					close();
 					for (k=0; k<Ch.length; k++){
-						if (isarr
 						if(Ch[k]>0){
 							selectWindow("PRJ");
 							setSlice(Ch[k]);
