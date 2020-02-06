@@ -9,7 +9,7 @@ run("Colors...", "foreground=black background=black selection=green");
 
 choices=newArray("Unprojected DV files: fast acquisition mode","Unprojected DV files: slow acquisition mode","Projected files","TIF files","Deconvolved DVs");
 Dialog.create("Set Channels");
-	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs","1",1);
+	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs","1,2,3",1);
 	Dialog.addNumber("Reference channel number",1,0,0,"");
 	Dialog.addNumber("DAPI channel number",99,0,0,"large number --> last channel");
 	Dialog.addNumber("Total channels",0,0,0," use 0 to auto-detect");
@@ -38,10 +38,10 @@ for (i = 0; i < DataSplit.length; i++) {
 	}
 }
 
-Ch=Array.concat(newArray(RefCh,DapiCh),DataChArray);
-RDM=newArray(Ch.length);	RDM[0] = "Ref";		RDM[1] = "mask";
-for (i = 2; i < RDM.length; i++) {
-	RDM[i] = "Data_"+d2s(i-1);
+Ch = Array.concat(newArray(RefCh,DapiCh),DataChArray);
+RMD = newArray(Ch.length);	RMD[0] = "Ref";		RMD[1] = "Mask";
+for (i = 2; i < RMD.length; i++) {
+	RMD[i] = "Data_"+d2s(i-1,0);
 }
 
 
@@ -71,32 +71,26 @@ if (MinCentro > MaxCentro)		exit("Minimum centromere size ("+MinCentro+") may no
 
 
 
+run("Close All");
+roiManager("reset");
+
 
 dir = getDirectory("Choose Base Directory ");
-
 outf="_OUTPUT";
 out=dir+outf+File.separator;
 File.makeDirectory(out);
-
-run("Close All");
-roiManager("reset");
 
 
 
 
 INITIATING_FUNCTION(dir);
 
-if(File.exists(dir+"OUTPUT_"+File.separator+"OUTPUT_.txt")==1)		File.delete(dir+"OUTPUT_"+File.separator+"OUTPUT_.txt");
-if(File.exists(dir+"OUTPUT_"+File.separator+"PRJ_.txt")==1)			File.delete(dir+"OUTPUT_"+File.separator+"PRJ_.txt");
-if(File.exists(dir+"OUTPUT_"+File.separator+"ROI_.txt")==1)			File.delete(dir+"OUTPUT_"+File.separator+"ROI_.txt");
-selectWindow("B&C");
-run("Close");
-selectWindow("Log");
-run("Close");
-selectWindow("ROI Manager");
-run("Close");
+close("B&C");
+close("Log");
+close("ROI Manager");
 
-
+run("Close All");
+waitForUser("CRaQ done");
 
 
 
@@ -104,6 +98,7 @@ run("Close");
 function INITIATING_FUNCTION(dir) {
 
 	print("\\Clear");
+	
 	if(File.exists(getDirectory("macros")+File.separator+"PrintDateTime.txt")==1)		runMacro("PrintDateTime");
 	else{
 		getDateAndTime(y, m, dW, dM, h, min, s, ms);
@@ -154,11 +149,13 @@ function INITIATING_FUNCTION(dir) {
 					close();
 					for (k=0; k<Ch.length; k++){
 						if(Ch[k]>0){
+							//waitForUser(Ch[k],RMD[k]);
 							selectWindow("PRJ");
-							setSlice(Ch[k]);
-							run("Duplicate...", "title="+RDM[k]);
+							Stack.setChannel(Ch[k]);
+							run("Duplicate...", "title="+RMD[k]);
 							run("Brightness/Contrast...");
 							resetMinAndMax();
+							//waitForUser(Ch[k],RMD[k]);
 						}
 					}
 					selectWindow("PRJ");
@@ -170,8 +167,7 @@ function INITIATING_FUNCTION(dir) {
 					MEASURE_FUNCTION();
 					if (roiManager("count")>0) {
 						roiManager("Save",out+slist[j]+"__ROI.zip")
-						roiManager("Deselect");
-						roiManager("Delete");
+						roiManager("reset");
 					}
 				}
 			}
@@ -228,8 +224,8 @@ function MEASURE_FUNCTION(){
 	setAutoThreshold("Default");
 	run("Analyze Particles...", "size="+MinCentro+"-"+MaxCentro+" circularity="+MinCirc+"-1.00 show=Nothing exclude clear");
 
-	for (data_channels = 0; data_channels < DataChArray; data_channels++) {
-		selectWindow(RDM[data_channels]);
+	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
+		selectWindow(RMD[data_channels]);
 		for (l=0;l<nResults;l++) {
 			if (getResult("Feret", l)<MaxFeret){
 				x=round(getResult("XM", l));
@@ -250,7 +246,8 @@ function MEASURE_FUNCTION(){
 			}
 		}
 	}
-
+	run("Close All");
+/*
 	selectWindow("Data");
 	close();
 	selectWindow("Ref");
@@ -259,6 +256,7 @@ function MEASURE_FUNCTION(){
 		selectWindow("Mask");
 		close();
 	}
+*/
 }
 
 
