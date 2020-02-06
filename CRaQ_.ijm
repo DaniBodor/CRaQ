@@ -34,7 +34,7 @@ for (i = 0; i < DataSplit.length; i++) {
 	DataChArray[i] = parseInt(DataSplit[i]);
 
 	if (isNaN(DataChArray[i])){
-		exit("" + DataSplit[i] + " detected as input for Data channel\n  Only integers are allowed in this field\n  Multiple inputs can be separated by using a comma (,)");
+		exit("\"" + DataSplit[i] + "\" detected as input for Data channel\n  Only integers are allowed in this field\n  Multiple inputs can be separated by using a comma (,)");
 	}
 }
 
