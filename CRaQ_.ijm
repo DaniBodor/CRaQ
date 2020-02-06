@@ -180,7 +180,7 @@ function listFiles(dir) {
 function measure(){
 	count=1;
 
-	if(DapiCh>0 && CroppedCells==0){
+	if(DapiCh =! 0 && CroppedCells == 0){
 		selectWindow("Mask");
 		run("Duplicate...", "title=blur");
 		run("Gaussian Blur...", "sigma=75");
@@ -201,7 +201,7 @@ function measure(){
 		run("Multiply...", "value=257.000");
 	}
 
-	if(DapiCh>0 && CroppedCells==1){
+	if( DapiCh != 0 && CroppedCells == 1){
 		selectWindow("Mask");
 		setAutoThreshold("Default");
 		getThreshold(AAA,BBB);
@@ -215,7 +215,7 @@ function measure(){
 
 	selectWindow("Ref");
 	run("Bandpass Filter...", "filter_large=10 filter_small=1 suppress=None tolerance=5 autoscale");
-	if(DapiCh>0)	imageCalculator("AND", "Ref","Mask");
+	if(DapiCh =! 0)	imageCalculator("AND", "Ref","Mask");
 	run("Invert");
 	if(is("Inverting LUT"))	run("Invert LUT");
 	setAutoThreshold("Default");
@@ -245,7 +245,7 @@ function measure(){
 	close();
 	selectWindow("Ref");
 	close();
-	if(DapiCh>0){
+	if(DapiCh =! 0){
 		selectWindow("Mask");
 		close();
 	}
