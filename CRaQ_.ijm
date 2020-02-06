@@ -32,7 +32,6 @@ DataSplit = split(DataCh, ",,");	// using two commas to avoid errors when string
 DataChArray = newArray(DataSplit.length);
 for (i = 0; i < DataSplit.length; i++) {
 	DataChArray[i] = parseInt(DataSplit[i]);
-	print(DataChArray[i]);
 
 	if (isNaN(DataChArray[i])){
 		exit("" + DataSplit[i] + " detected as input for Data channel\n  Only integers are allowed in this field\n  Multiple inputs can be separated by using a comma (,)");
@@ -65,6 +64,10 @@ if (MinCirc >= 1)			exit("Minimum circularity should be smaller than 1");
 if (MinCentro >= MaxCentro)		exit("Minimum centromere size should be smaller than maximum centromere size");
 
 
+corner=(SquareSize-1)/2;
+
+Ch=newArray(RefCh,DataCh,DapiCh);
+RDM=newArray("Ref","Data","Mask");
 
 dir = getDirectory("Choose Base Directory ");
 
@@ -72,12 +75,8 @@ outf="_OUTPUT";
 out=dir+outf+File.separator;
 File.makeDirectory(out);
 
-corner=(SquareSize-1)/2;
-roiManager("reset");
-Ch=newArray(RefCh,DataCh,DapiCh);
-RDM=newArray("Ref","Data","Mask");
-
 run("Close All");
+roiManager("reset");
 
 listFiles(dir);
 
@@ -111,7 +110,7 @@ function listFiles(dir) {
 	print("ImageJ version: "+getVersion);
 	print("Base Directory: ", dir);
 	print("Reference Channel: "+Ch[0]);
-	print("Data Channel: "+Ch[1]);
+	print("Data Channel(s): "+Ch[1]);
 	print("DAPI Channel: "+Ch[2]);
 	print("");
 	print ("Square Size: ", SquareSize);
