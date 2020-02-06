@@ -38,8 +38,11 @@ for (i = 0; i < DataSplit.length; i++) {
 	}
 }
 
-Ch=newArray(RefCh,DataCh,DapiCh);
-RDM=newArray("Ref","Data","Mask");
+Ch=Array.concat(newArray(RefCh,DapiCh),DataChArray);
+RDM=newArray(Ch.length);	RDM[0] = "Ref";		RDM[1] = "mask";
+for (i = 2; i < RDM.length; i++) {
+	RDM[i] = "Data_"+d2s(i-1);
+}
 
 
 
@@ -81,7 +84,7 @@ roiManager("reset");
 
 
 
-CEN_MEASURE(dir);
+INITIATING_FUNCTION(dir);
 
 if(File.exists(dir+"OUTPUT_"+File.separator+"OUTPUT_.txt")==1)		File.delete(dir+"OUTPUT_"+File.separator+"OUTPUT_.txt");
 if(File.exists(dir+"OUTPUT_"+File.separator+"PRJ_.txt")==1)			File.delete(dir+"OUTPUT_"+File.separator+"PRJ_.txt");
@@ -98,7 +101,7 @@ run("Close");
 
 
 ///////////////////////////FUNCTIONS///////////////////////////FUNCTIONS///////////////////////////FUNCTIONS///////////////////////////FUNCTIONS///////////////////////////
-function CEN_MEASURE(dir) {
+function INITIATING_FUNCTION(dir) {
 
 	print("\\Clear");
 	if(File.exists(getDirectory("macros")+File.separator+"PrintDateTime.txt")==1)		runMacro("PrintDateTime");
@@ -164,7 +167,7 @@ function CEN_MEASURE(dir) {
 					}
 					close();
 					print("\n=="+slist[j]);
-					measure();
+					MEASURE_FUNCTION();
 					if (roiManager("count")>0) {
 						roiManager("Save",out+slist[j]+"__ROI.zip")
 						roiManager("Deselect");
@@ -181,7 +184,7 @@ function CEN_MEASURE(dir) {
 
 
 
-function measure(){
+function MEASURE_FUNCTION(){
 	count=1;
 
 	if(DapiCh != 0 && CroppedCells == 0){
@@ -225,26 +228,29 @@ function measure(){
 	setAutoThreshold("Default");
 	run("Analyze Particles...", "size="+MinCentro+"-"+MaxCentro+" circularity="+MinCirc+"-1.00 show=Nothing exclude clear");
 
-	selectWindow("Data");
-	for (l=0;l<nResults;l++) {
-		if (getResult("Feret", l)<MaxFeret){
-			x=round(getResult("XM", l));
-			y=round(getResult("YM", l));
-			cx=x-xCor;cy=y-yCor;
-			makeRectangle(x-corner, y-corner, SquareSize, SquareSize);
-			getStatistics(area, no, no, no);
-			makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
-			getStatistics(no, mean, min, max);
-			if (min>0 && max<65000 && area==(SquareSize*SquareSize)){
-				if (max>0)	print (count+"\t"+max-min);
-				else		print (count+"\tND");
-				count++;
-				fillRect(cx-corner, cy-corner, SquareSize, SquareSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(min>0)"
+	for (data_channels = 0; data_channels < DataChArray; data_channels++) {
+		selectWindow(RDM[data_channels]);
+		for (l=0;l<nResults;l++) {
+			if (getResult("Feret", l)<MaxFeret){
+				x=round(getResult("XM", l));
+				y=round(getResult("YM", l));
+				cx=x-xCor;cy=y-yCor;
+				makeRectangle(x-corner, y-corner, SquareSize, SquareSize);
+				getStatistics(area, no, no, no);
 				makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
-				roiManager("Add");
+				getStatistics(no, mean, min, max);
+				if (min>0 && max<65000 && area==(SquareSize*SquareSize)){
+					if (max>0)	print (count+"\t"+max-min);
+					else		print (count+"\tND");
+					count++;
+					fillRect(cx-corner, cy-corner, SquareSize, SquareSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(min>0)"
+					makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
+					roiManager("Add");
+				}
 			}
 		}
 	}
+
 	selectWindow("Data");
 	close();
 	selectWindow("Ref");
