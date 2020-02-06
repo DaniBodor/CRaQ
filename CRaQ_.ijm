@@ -12,7 +12,7 @@ Dialog.create("Set Channels");
 	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs","1",1);
 	Dialog.addNumber("Reference channel number",1,0,0,"");
 	Dialog.addNumber("DAPI channel number",99,0,0,"large number --> last channel");
-	Dialog.addNumber("Total channels",0,0,0,"0=read from metadata");
+	Dialog.addNumber("Total channels",0,0,0," use 0 to auto-detect");
 	Dialog.addMessage("");
 	Dialog.addCheckbox("Change default parameter settings?",0);
 	Dialog.addCheckbox("Cropped cells?",0);
@@ -133,17 +133,18 @@ function listFiles(dir) {
 			print(list[i]+"\t"+list[i]);
 			for (j=0; j<slist.length; j++) {
 				if (endsWith(slist[j], ".dv") || endsWith(slist[j], ".tif")){
-					dvFile = sdir+slist[j];
-					run("Open...", "open=["+dvFile+"] view=[Standard ImageJ] stack_order=Default");
+					Image = sdir+slist[j];
+					run("Open...", "open=["+Image+"] view=[Standard ImageJ] stack_order=Default");
+					if TotCh == 0 (Stack.getDimensions(WIDTH,HEIGHT,   TotCh   ,Zdepth,Tframes));		// read total chanel info from Metadata; everything else unused
 					Deco=indexOf(getTitle,"D3D");
-					TotSl=nSlices;
+					TotSlice=nSlices;
 					run("Properties...", "unit=pixel pixel_width=1 pixel_height=1");
-					run("Rename...", "title=dvFile");
+					run("Rename...", "title=Image");
 					
 					if(nSlices>TotCh)		run("Z Project...", "projection=[Max Intensity]");
 					else			run("Duplicate...", "title=PRJ duplicate");
 					run("Rename...", "title=PRJ");
-					selectWindow("dvFile");
+					selectWindow("Image");
 					close();
 					for (k=0; k<Ch.length; k++){
 						if(Ch[k]>0){
@@ -155,7 +156,7 @@ function listFiles(dir) {
 						}
 					}
 					selectWindow("PRJ");
-					if(TotCh<TotSl){
+					if(TotCh<TotSlice){
 						saveAs("Tiff", out+slist[j]+"__PRJ.tif");
 					}
 					close();
