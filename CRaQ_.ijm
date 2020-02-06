@@ -254,19 +254,22 @@ function MEASURE_FUNCTION(){
 			}
 		}
 	}
+	roiNumber = roiManager("count");
+	Table.setColumn("ROI ", Array.getSequence(roiNumber);
 
 	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
 		resArray = newArray(0);
 		selectWindow(RDM[data_channels+2]);
-		for (roi = 0; roi < roiManager("count"); roi++) {
+		for (roi = 0; roi < roiNumber; roi++) {
 			roiManager("select", roi);
 			getStatistics(no, DataMean, DataMin, DataMax);
 		
 			if (DataMax > Saturation)	resArray = Array.concat(resArray,"Saturated Pixel");
 			else						resArray = Array.concat(resArray,max-min);
 		}
-	Table.setColumn("Channel "+DataChArray[data_channels], resArray)
+	Table.setColumn("Channel "+DataChArray[data_channels], resArray);
 	}
+	
 	
 	
 
