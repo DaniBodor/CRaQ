@@ -147,6 +147,7 @@ function listFiles(dir) {
 					selectWindow("Image");
 					close();
 					for (k=0; k<Ch.length; k++){
+						if (isarr
 						if(Ch[k]>0){
 							selectWindow("PRJ");
 							setSlice(Ch[k]);
