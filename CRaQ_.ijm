@@ -139,13 +139,13 @@ function INITIATING_FUNCTION(dir) {
 	for (i=0; i<list.length; i++) {
 		if (endsWith(list[i], "/") && indexOf(list[i],outf)<0){
 			sdir= dir+list[i];
-			list[i]=substring(list[i],0,lengthOf(list[i])-1);
+			DIRname=substring(list[i],0,lengthOf(list[i])-1);
 			slist= getFileList(sdir);
-//			print(list[i]+"\t"+list[i]);
 			for (j=0; j<slist.length; j++) {
 				if (endsWith(slist[j], ".dv") || endsWith(slist[j], ".tif")){
-					Image = sdir+slist[j];
-					run("Open...", "open=["+Image+"] view=[Standard ImageJ] stack_order=Default");
+					ImageLoc = sdir+slist[j];
+					IMname = slist[j];
+					run("Open...", "open=["+ImageLoc+"] view=[Standard ImageJ] stack_order=Default");
 					if (TotCh == 0) 		Stack.getDimensions(WIDTH,HEIGHT,   TotCh   ,Zdepth,Tframes);		// read total chanel info from Metadata; everything else unused
 					Deco=indexOf(getTitle,"D3D");
 					TotSlice=nSlices;
@@ -182,7 +182,7 @@ function INITIATING_FUNCTION(dir) {
 				}
 			}
 			selectWindow("Log");
-			saveAs("Text",out+"_R"+Ch[0]+"D"+Ch[1]+"_"+list[i]+".txt");
+			saveAs("Text",out+"_R"+Ch[0]+"D"+Ch[1]+"_"+DIRname+".txt");
 			print("\\Clear") ;
 		}
 	}
@@ -259,15 +259,18 @@ function MEASURE_FUNCTION(){
 		resArray = newArray(0);
 		selectWindow(RMD[data_channels+2]);
 		for (roi = 0; roi < roiNumber; roi++) {
+			Table.set("Image",roi,IMname);
 			Table.set("ROI", roi, roi+1);
-			Table.set("Image",roi,list[i]);
 			roiManager("select", roi);
 			getStatistics(no, DataMean, DataMin, DataMax);
-			spot_value = DataMax - DataMin
+			spot_value = DataMax - DataMin;
 			//if (DataMax > Saturation)	resArray = Array.concat(resArray,"Saturated Pixel");
 			//else						resArray = Array.concat(resArray,spot_value);
-			if (DataMax > Saturation)	Table.set(columnName, roi, "Saturated Pixel");
-			else						Table.set(columnName, roi, ,spot_value);
+			if (DataMax > Saturation){
+				Table.set(columnName, roi, "Saturated Pixel");
+			} else {
+				Table.set(columnName, roi, spot_value);
+			}
 			
 		}
 		Table.update;
