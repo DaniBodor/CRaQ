@@ -94,9 +94,8 @@ File.makeDirectory(out);
 INITIATING_FUNCTION(dir);
 
 close("B&C");
-close("Log");
+//close("Log");
 close("ROI Manager");
-
 run("Close All");
 waitForUser("CRaQ done");
 
@@ -114,12 +113,12 @@ function INITIATING_FUNCTION(dir) {
 	}
 
 	print("CRaQ_ Macro version: "+version);
-	print("Please visit https://github.com/DaniBodor/CRaQ for updates");
+	print("Updates will be published on:\nhttps://github.com/DaniBodor/CRaQ/");
 	print("ImageJ version: "+getVersion);
 	print("Base Directory: ", dir);
-	print("Reference Channel: "+Ch[0]);
-	print("Data Channel(s): "+Ch[1]);
-	print("DAPI Channel: "+Ch[2]);
+	print("Data Channel(s): "+DataCh);
+	print("Reference Channel: "+RefCh);
+	print("DAPI Channel: "+DapiCh);
 	print("");
 	print ("Square Size: ", SquareSize);
 	print ("Minimum Circularity: ", MinCirc);
@@ -132,7 +131,6 @@ function INITIATING_FUNCTION(dir) {
 	print ("Pixel Saturation at: ", Saturation, "arbitrary intensity units");
 	selectWindow("Log");
 	saveAs("Text",out+"__logfile.txt");
-	print("\\Clear");
 
 
 
@@ -142,7 +140,6 @@ function INITIATING_FUNCTION(dir) {
 			sdir= dir+list[i];
 			DIRname=substring(list[i],0,lengthOf(list[i])-1);
 			Table.create("DataTable");
-			waitForUser("about to reset row offset");
 			rowOffset = 0;
 			slist= getFileList(sdir);
 			for (j=0; j<slist.length; j++) {
@@ -164,13 +161,11 @@ function INITIATING_FUNCTION(dir) {
 					close();
 					for (k=0; k<Ch.length; k++){
 						if(Ch[k]>0){
-							//waitForUser(Ch[k],RMD[k]);
 							selectWindow("PRJ");
 							Stack.setChannel(Ch[k]);
 							run("Duplicate...", "title="+RMD[k]);
 							run("Brightness/Contrast...");
 							resetMinAndMax();
-							//waitForUser(Ch[k],RMD[k]);
 						}
 					}
 					selectWindow("PRJ");
@@ -178,7 +173,7 @@ function INITIATING_FUNCTION(dir) {
 						saveAs("Tiff", out+slist[j]+"__PRJ.tif");
 					}
 					close();
-					print("\n=="+slist[j]);
+					//print("\n=="+slist[j]);
 					rowOffset = MEASURE_FUNCTION(rowOffset);
 					if (roiManager("count")>0) {
 						roiManager("Save",out+slist[j]+"__ROI.zip")
@@ -187,10 +182,15 @@ function INITIATING_FUNCTION(dir) {
 					run("Close All");
 				}
 			}
-			selectWindow("Log");
+/*			selectWindow("Log");
 			saveAs("Text",out+"_"+DIRname+".txt");
 			print("\\Clear") ;
-			
+*/			
+			selectWindow("DataTable");
+			saveAs("Results",out+"_"+DIRname+".csv");
+//			waitForUser(Table.title);
+			close("_"+DIRname+".csv");
+//			waitForUser("_"+DIRname+".csv");
 		}
 	}
 }
@@ -260,12 +260,10 @@ function MEASURE_FUNCTION(rowOffset){
 	roiNumber = roiManager("count");
 	
 	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
-		columnName = "Channel_" + DataChArray[data_channels];
+		columnName = "Ch" + DataChArray[data_channels];
 		resArray = newArray(0);
 		selectWindow(RMD[data_channels+2]);
 		selectWindow("DataTable");
-		Table.update;
-		waitForUser(rowOffset);
 		for (roi = 0; roi < roiNumber; roi++) {
 			row = roi + rowOffset;
 			Table.set("Image",row, IMname);
@@ -273,8 +271,6 @@ function MEASURE_FUNCTION(rowOffset){
 			roiManager("select", roi);
 			getStatistics(no, DataMean, DataMin, DataMax);
 			spot_value = DataMax - DataMin;
-			//if (DataMax > Saturation)	resArray = Array.concat(resArray,"Saturated Pixel");
-			//else						resArray = Array.concat(resArray,spot_value);
 			if (DataMax > Saturation){
 				Table.set(columnName, row, "Saturated Pixel");
 			} else {
@@ -285,23 +281,7 @@ function MEASURE_FUNCTION(rowOffset){
 		Table.update;
 	}
 	rowOffset += roiNumber;
-	waitForUser(rowOffset);
 	return rowOffset;
-	
-	
-	
-
-	run("Close All");
-/*
-	selectWindow("Data");
-	close();
-	selectWindow("Ref");
-	close();
-	if(DapiCh != 0){
-		selectWindow("Mask");
-		close();
-	}
-*/
 }
 
 
