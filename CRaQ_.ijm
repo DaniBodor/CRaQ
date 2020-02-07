@@ -136,7 +136,8 @@ function INITIATING_FUNCTION(dir) {
 	print ("Pixel Saturation at: ", Saturation, "arbitrary intensity units"
 	selectWindow("Log");
 	saveAs("Text",out+"_R"+Ch[0]+"D"+Ch[1]+"__logfile.txt");
-	print("\\Clear") ;
+	print("\\Clear") 
+	Table.create("DataTable");
 
 	list = getFileList(dir);
 	for (i=0; i<list.length; i++) {
@@ -145,7 +146,6 @@ function INITIATING_FUNCTION(dir) {
 			list[i]=substring(list[i],0,lengthOf(list[i])-1);
 			slist= getFileList(sdir);
 //			print(list[i]+"\t"+list[i]);
-			Table.create("DataTable");
 			for (j=0; j<slist.length; j++) {
 				if (endsWith(slist[j], ".dv") || endsWith(slist[j], ".tif")){
 					Image = sdir+slist[j];
@@ -255,20 +255,25 @@ function MEASURE_FUNCTION(){
 		}
 	}
 	roiNumber = roiManager("count");
-	Table.setColumn("ROI ", Array.getSequence(roiNumber);
+	
 	// RESOLVE BY NOT RESETTING TABLE EACH TIME, NOT USING SET COLUMN, BUT USING SET. SEE https://wsr.imagej.net/macros/Sine_Cosine_Table2.txt
 
 	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
+		columnName = DataChArray[data_channels];
 		resArray = newArray(0);
 		selectWindow(RDM[data_channels+2]);
 		for (roi = 0; roi < roiNumber; roi++) {
+			Table.set("ROI", roi, roi+1);
+			Table.set("Image",roi,list[i]);
 			roiManager("select", roi);
 			getStatistics(no, DataMean, DataMin, DataMax);
-		
-			if (DataMax > Saturation)	resArray = Array.concat(resArray,"Saturated Pixel");
-			else						resArray = Array.concat(resArray,max-min);
+			spot_value = DataMax - DataMin
+			//if (DataMax > Saturation)	resArray = Array.concat(resArray,"Saturated Pixel");
+			//else						resArray = Array.concat(resArray,spot_value);
+			if (DataMax > Saturation)	Table.set(columnName, roi, "Saturated Pixel");
+			else						Table.set(columnName, roi, ,spot_value);
+			
 		}
-	Table.setColumn("Channel "+DataChArray[data_channels], resArray);
 	}
 	
 	
