@@ -131,21 +131,25 @@ function INITIATING_FUNCTION(dir) {
 	print ("CameraBitDepth: ", CameraBitDepth);
 	print ("Pixel Saturation at: ", Saturation, "arbitrary intensity units");
 	selectWindow("Log");
-	saveAs("Text",out+"_R"+Ch[0]+"D"+Ch[1]+"__logfile.txt");
+	saveAs("Text",out+"__logfile.txt");
 	print("\\Clear");
-	Table.create("DataTable");
+
+
 
 	list = getFileList(dir);
 	for (i=0; i<list.length; i++) {
 		if (endsWith(list[i], "/") && indexOf(list[i],outf)<0){
 			sdir= dir+list[i];
 			DIRname=substring(list[i],0,lengthOf(list[i])-1);
+			Table.create("DataTable");
+			rowOffset = 0;
 			slist= getFileList(sdir);
 			for (j=0; j<slist.length; j++) {
 				if (endsWith(slist[j], ".dv") || endsWith(slist[j], ".tif")){
 					ImageLoc = sdir+slist[j];
 					IMname = slist[j];
 					run("Open...", "open=["+ImageLoc+"] view=[Standard ImageJ] stack_order=Default");
+					roiManager("reset");
 					if (TotCh == 0) 		Stack.getDimensions(WIDTH,HEIGHT,   TotCh   ,Zdepth,Tframes);		// read total chanel info from Metadata; everything else unused
 					Deco=indexOf(getTitle,"D3D");
 					TotSlice=nSlices;
@@ -182,8 +186,9 @@ function INITIATING_FUNCTION(dir) {
 				}
 			}
 			selectWindow("Log");
-			saveAs("Text",out+"_R"+Ch[0]+"D"+Ch[1]+"_"+DIRname+".txt");
+			saveAs("Text",out+"_"+DIRname+".txt");
 			print("\\Clear") ;
+			
 		}
 	}
 }
@@ -253,29 +258,31 @@ function MEASURE_FUNCTION(){
 	roiNumber = roiManager("count");
 	
 	// RESOLVE BY NOT RESETTING TABLE EACH TIME, NOT USING SET COLUMN, BUT USING SET. SEE https://wsr.imagej.net/macros/Sine_Cosine_Table2.txt
-
+	
 	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
-		columnName = DataChArray[data_channels];
+		columnName = "Channel_" + DataChArray[data_channels];
 		resArray = newArray(0);
 		selectWindow(RMD[data_channels+2]);
+		selectWindow("DataTable");
 		for (roi = 0; roi < roiNumber; roi++) {
-			Table.set("Image",roi,IMname);
-			Table.set("ROI", roi, roi+1);
+			row = roi + rowOffset;
+			Table.set("Image",row, IMname);
+			Table.set("ROI", row, roi+1);
 			roiManager("select", roi);
 			getStatistics(no, DataMean, DataMin, DataMax);
 			spot_value = DataMax - DataMin;
 			//if (DataMax > Saturation)	resArray = Array.concat(resArray,"Saturated Pixel");
 			//else						resArray = Array.concat(resArray,spot_value);
 			if (DataMax > Saturation){
-				Table.set(columnName, roi, "Saturated Pixel");
+				Table.set(columnName, row, "Saturated Pixel");
 			} else {
-				Table.set(columnName, roi, spot_value);
+				Table.set(columnName, row, spot_value);
 			}
 			
 		}
 		Table.update;
 	}
-	
+	rowOffset += roiNumber;
 	
 	
 
