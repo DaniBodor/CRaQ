@@ -142,6 +142,7 @@ function INITIATING_FUNCTION(dir) {
 			sdir= dir+list[i];
 			DIRname=substring(list[i],0,lengthOf(list[i])-1);
 			Table.create("DataTable");
+			waitForUser("about to reset row offset");
 			rowOffset = 0;
 			slist= getFileList(sdir);
 			for (j=0; j<slist.length; j++) {
@@ -178,11 +179,12 @@ function INITIATING_FUNCTION(dir) {
 					}
 					close();
 					print("\n=="+slist[j]);
-					MEASURE_FUNCTION();
+					rowOffset = MEASURE_FUNCTION(rowOffset);
 					if (roiManager("count")>0) {
 						roiManager("Save",out+slist[j]+"__ROI.zip")
 						roiManager("reset");
 					}
+					run("Close All");
 				}
 			}
 			selectWindow("Log");
@@ -195,7 +197,7 @@ function INITIATING_FUNCTION(dir) {
 
 
 
-function MEASURE_FUNCTION(){
+function MEASURE_FUNCTION(rowOffset){
 	count=1;
 
 	if(DapiCh != 0 && CroppedCells == 0){
@@ -257,13 +259,13 @@ function MEASURE_FUNCTION(){
 	}
 	roiNumber = roiManager("count");
 	
-	// RESOLVE BY NOT RESETTING TABLE EACH TIME, NOT USING SET COLUMN, BUT USING SET. SEE https://wsr.imagej.net/macros/Sine_Cosine_Table2.txt
-	
 	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
 		columnName = "Channel_" + DataChArray[data_channels];
 		resArray = newArray(0);
 		selectWindow(RMD[data_channels+2]);
 		selectWindow("DataTable");
+		Table.update;
+		waitForUser(rowOffset);
 		for (roi = 0; roi < roiNumber; roi++) {
 			row = roi + rowOffset;
 			Table.set("Image",row, IMname);
@@ -283,6 +285,9 @@ function MEASURE_FUNCTION(){
 		Table.update;
 	}
 	rowOffset += roiNumber;
+	waitForUser(rowOffset);
+	return rowOffset;
+	
 	
 	
 
