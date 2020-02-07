@@ -1,5 +1,5 @@
 //####### CRaQ VERSION
-version = "v1.2";
+version = "v1.21";
 //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //#######
 
 
@@ -16,8 +16,9 @@ Dialog.create("Set Channels");
 	Dialog.addMessage("");
 	Dialog.addNumber("Camera Bitdepth",12,0,0,"usually 12 or 16");
 	Dialog.addMessage("");
-	Dialog.addCheckbox("Change default parameter settings?",0);
-	Dialog.addCheckbox("Cropped cells?",0);
+	Dialog.addCheckbox("Chromatic aberration correction using MultiStackReg",1);
+	Dialog.addCheckbox("Change default parameter settings",0);
+	Dialog.addCheckbox("Cropped cells",0);
 	Dialog.addMessage("");
 	
 Dialog.show();
@@ -26,6 +27,7 @@ Dialog.show();
 	DapiCh=Dialog.getNumber();
 	TotCh=Dialog.getNumber();
 	CameraBitDepth=Dialog.getNumber();
+	AutoChromAbCorr=Dialog.getCheckbox();
 	Change=Dialog.getCheckbox();
 	CroppedCells=Dialog.getCheckbox();
 
@@ -64,6 +66,7 @@ Dialog.create("Change parameter settings");
 	Dialog.addNumber("Threshold Factor",1.11,2,4,"pixel intensity");
 	Dialog.addNumber("Pixels are considered saturated at: ",92,0,2,"% of camera saturation");
 	Dialog.addMessage("\nIf known, set the chromatic aberration of the reference channel compared to the data channel.");
+	Dialog.addMessage("If automatic corrections are used, this should be left at (0,0).");
 	Dialog.addNumber("Chromatic aberration (horizontal): ",0,0,2,"pixels to right");
 	Dialog.addNumber("Chromatic aberration (vertical): ",0,0,2,"pixels down");
 if (Change == 1) 
@@ -126,7 +129,9 @@ function INITIATING_FUNCTION(dir) {
 	print ("Minimum Centromere Size: ", MinCentro);
 	print ("Maximum Centromere Size: ", MaxCentro);
 	print ("Threshold Factor: ", OtsuUp);
-	print ("Chromatic aberration correction: ("+xCor+","+yCor+") [(x,y) difference of reference compared to data]");
+	if (AutoChromAbCorr == 1)	answer="Yes"; else answer="No";
+	print ("Automatic correction of chromatic aberration using MultiStackReg: "+answer);
+	print ("User-defined chromatic aberration correction: ("+xCor+","+yCor+") [(x,y) difference of reference compared to data]");
 	print ("CameraBitDepth: ", CameraBitDepth);
 	print ("Pixel Saturation at: ", Saturation, "arbitrary intensity units");
 	selectWindow("Log");
@@ -157,8 +162,21 @@ function INITIATING_FUNCTION(dir) {
 					if(nSlices>TotCh)		run("Z Project...", "projection=[Max Intensity]");
 					else			run("Duplicate...", "title=PRJ duplicate");
 					run("Rename...", "title=PRJ");
-					selectWindow("Image");
-					close();
+					
+					// auto-chromatic aberration correction
+					if (AutoChromAbCorr == 1){
+						run("MultiStackReg", "stack_1=PRJ action_1=Align file_1=[] stack_2=None action_2=Ignore file_2=[] transformation=Translation");
+						run("Z Project...", "projection=[Min Intensity]");
+						MinPRJ = getTitle();
+						doWand(0,0);
+						run("Make Inverse");
+						selectWindow("PRJ");
+						run("Restore Selection");
+						run("Crop");
+						close(MinPRJ);
+					}
+					
+					close("Image");
 					for (k=0; k<Ch.length; k++){
 						if(Ch[k]>0){
 							selectWindow("PRJ");
@@ -169,9 +187,7 @@ function INITIATING_FUNCTION(dir) {
 						}
 					}
 					selectWindow("PRJ");
-					if(TotCh<TotSlice){
-						saveAs("Tiff", out+slist[j]+"__PRJ.tif");
-					}
+					saveAs("Tiff", out+slist[j]+"__PRJ.tif");
 					close();
 					//print("\n=="+slist[j]);
 					rowOffset = MEASURE_FUNCTION(rowOffset);
