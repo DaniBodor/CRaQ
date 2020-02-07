@@ -48,7 +48,7 @@ for (i = 0; i < DataSplit.length; i++) {
 }
 
 Ch = Array.concat(newArray(RefCh,DapiCh),DataChArray);
-RMD = newArray(Ch.length);	RMD[0] = "Ref";		RMD[1] = "Mask";
+RMD = newArray(Ch.length); RMD[0] = "Ref";	RMD[1] = "Mask";
 for (i = 2; i < RMD.length; i++) {
 	RMD[i] = "Data_"+d2s(i-1,0);
 }
@@ -62,7 +62,7 @@ Dialog.create("Change parameter settings");
 	Dialog.addNumber("Min Centromere Size",4,0,2,"pixel");
 	Dialog.addNumber("Max Centromere Size",35,0,2,"pixel");
 	Dialog.addNumber("Threshold Factor",1.11,2,4,"pixel intensity");
-	Dialog.addNumber("Pixels are considered saturated at: "92,0,2,"% of camera saturation");
+	Dialog.addNumber("Pixels are considered saturated at: ",92,0,2,"% of camera saturation");
 	Dialog.addMessage("\nIf known, set the chromatic aberration of the reference channel compared to the data channel.");
 	Dialog.addNumber("Chromatic aberration (horizontal): ",0,0,2,"pixels to right");
 	Dialog.addNumber("Chromatic aberration (vertical): ",0,0,2,"pixels down");
@@ -91,9 +91,6 @@ outf="_OUTPUT";
 out=dir+outf+File.separator;
 File.makeDirectory(out);
 
-
-
-
 INITIATING_FUNCTION(dir);
 
 close("B&C");
@@ -102,7 +99,6 @@ close("ROI Manager");
 
 run("Close All");
 waitForUser("CRaQ done");
-
 
 
 ///////////////////////////FUNCTIONS///////////////////////////FUNCTIONS///////////////////////////FUNCTIONS///////////////////////////FUNCTIONS///////////////////////////
@@ -133,10 +129,10 @@ function INITIATING_FUNCTION(dir) {
 	print ("Threshold Factor: ", OtsuUp);
 	print ("Chromatic aberration correction: ("+xCor+","+yCor+") [(x,y) difference of reference compared to data]");
 	print ("CameraBitDepth: ", CameraBitDepth);
-	print ("Pixel Saturation at: ", Saturation, "arbitrary intensity units"
+	print ("Pixel Saturation at: ", Saturation, "arbitrary intensity units");
 	selectWindow("Log");
 	saveAs("Text",out+"_R"+Ch[0]+"D"+Ch[1]+"__logfile.txt");
-	print("\\Clear") 
+	print("\\Clear");
 	Table.create("DataTable");
 
 	list = getFileList(dir);
@@ -261,7 +257,7 @@ function MEASURE_FUNCTION(){
 	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
 		columnName = DataChArray[data_channels];
 		resArray = newArray(0);
-		selectWindow(RDM[data_channels+2]);
+		selectWindow(RMD[data_channels+2]);
 		for (roi = 0; roi < roiNumber; roi++) {
 			Table.set("ROI", roi, roi+1);
 			Table.set("Image",roi,list[i]);
@@ -274,6 +270,7 @@ function MEASURE_FUNCTION(){
 			else						Table.set(columnName, roi, ,spot_value);
 			
 		}
+		Table.update;
 	}
 	
 	
