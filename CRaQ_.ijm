@@ -9,7 +9,7 @@ run("Colors...", "foreground=black background=black selection=green");
 
 choices=newArray("Unprojected DV files: fast acquisition mode","Unprojected DV files: slow acquisition mode","Projected files","TIF files","Deconvolved DVs");
 Dialog.create("Set Channels");
-	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs","1,2,3",1);
+	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs","1,2,3",3);
 	Dialog.addNumber("Reference channel number",1,0,0,"");
 	Dialog.addNumber("DAPI channel number",99,0,0,"large number --> last channel");
 	Dialog.addNumber("Total channels",0,0,0," use 0 to auto-detect");
@@ -39,15 +39,28 @@ for (b = 0; b < CameraBitDepth; b++) {
 	SatPixVal *= 2;
 }
 
-DataSplit = split(DataCh, ",,");	// using two commas to avoid errors when string ends with comma or consecutive commas are used
-DataChArray = newArray(DataSplit.length);
-for (i = 0; i < DataSplit.length; i++) {
-	DataChArray[i] = parseInt(DataSplit[i]);
 
-	if (isNaN(DataChArray[i])){
-		exit("\"" + DataSplit[i] + "\" detected as input for Data channel\n  Only integers are allowed in this field\n  Multiple inputs can be separated by using a comma (,)");
+
+// make Data input readable my code
+if (parseInt(DataCh) > 99){
+	DataChArray = newArray(lengthOf(DataSplit));
+	for (d=0;d<lengthOf(DataCh);d++){
+		DataChArray[d] = parseInt(substring(DatCh, d, d+1));
 	}
 }
+else{
+	DataSplit = split(DataCh, ",,");	// using two commas to avoid errors when string ends with comma or consecutive commas are used
+	DataChArray = newArray(DataSplit.length);
+	for (i = 0; i < DataSplit.length; i++) {
+		DataChArray[i] = parseInt(DataSplit[i]);
+	
+		if (isNaN(DataChArray[i])){
+			exit("\"" + DataSplit[i] + "\" detected as input for Data channel\n  Only integers are allowed in this field\n  Multiple inputs can be separated by using a comma (,)");
+		}
+	}
+}
+
+
 
 Ch = Array.concat(newArray(RefCh,DapiCh),DataChArray);
 RMD = newArray(Ch.length); RMD[0] = "Ref";	RMD[1] = "Mask";
@@ -170,6 +183,7 @@ function INITIATING_FUNCTION(dir) {
 						MinPRJ = getTitle();
 						doWand(0,0);
 						run("Make Inverse");
+						//waitForUser(IMname);
 						selectWindow("PRJ");
 						run("Restore Selection");
 						run("Crop");
