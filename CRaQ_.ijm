@@ -31,44 +31,10 @@ Dialog.show();
 	Change=Dialog.getCheckbox();
 	CroppedCells=Dialog.getCheckbox();
 
-if (RefCh == DapiCh){
-	exit("Reference and Data channels should be different from DAPI channel");
-}
+
+if (RefCh == DapiCh)	exit("Reference and Data channels should be different from DAPI channel");
 SatPixVal = 1;
-for (b = 0; b < CameraBitDepth; b++) {
-	SatPixVal *= 2;
-}
-
-
-
-// make Data input readable my code
-if (parseInt(DataCh) > 99){
-	DataChArray = newArray(lengthOf(DataSplit));
-	for (d=0;d<lengthOf(DataCh);d++){
-		DataChArray[d] = parseInt(substring(DatCh, d, d+1));
-	}
-}
-else{
-	DataSplit = split(DataCh, ",,");	// using two commas to avoid errors when string ends with comma or consecutive commas are used
-	DataChArray = newArray(DataSplit.length);
-	for (i = 0; i < DataSplit.length; i++) {
-		DataChArray[i] = parseInt(DataSplit[i]);
-	
-		if (isNaN(DataChArray[i])){
-			exit("\"" + DataSplit[i] + "\" detected as input for Data channel\n  Only integers are allowed in this field\n  Multiple inputs can be separated by using a comma (,)");
-		}
-	}
-}
-
-
-
-Ch = Array.concat(newArray(RefCh,DapiCh),DataChArray);
-RMD = newArray(Ch.length); RMD[0] = "Ref";	RMD[1] = "Mask";
-for (i = 2; i < RMD.length; i++) {
-	RMD[i] = "Data_"+d2s(i-1,0);
-}
-
-
+for (b = 0; b < CameraBitDepth; b++) SatPixVal *= 2;
 
 Dialog.create("Change parameter settings");
 	Dialog.addNumber("Square size",7,0,0,"pixels");
@@ -95,6 +61,30 @@ if (Change == 1)
 	yCor=Dialog.getNumber();
 if (MinCirc >= 1)				exit("Minimum circularity was set to" + MinCirc + ".\n Please enter a value between 0 and 1");
 if (MinCentro > MaxCentro)		exit("Minimum centromere size ("+MinCentro+") may not be larger than maximum centromere size ("+MaxCentro+")");
+
+// Make Data input correlate to channel numbers
+if (parseInt(DataCh) > 99){
+	DataChArray = newArray(lengthOf(DataCh));
+	for (d=0;d<lengthOf(DataCh);d++){
+		DataChArray[d] = parseInt(substring(DataCh, d, d+1));
+	}
+}
+else{
+	DataSplit = split(DataCh, ",,");	// using two commas to avoid errors when string ends with comma or consecutive commas are used
+	DataChArray = newArray(DataSplit.length);
+	for (i = 0; i < DataSplit.length; i++) {
+		DataChArray[i] = parseInt(DataSplit[i]);
+	
+		if (isNaN(DataChArray[i])){
+			exit("\"" + DataSplit[i] + "\" detected as input for Data channel\n  Only integers are allowed in this field\n  Multiple inputs can be separated by using a comma (,)");
+		}
+	}
+}
+Ch = Array.concat(newArray(RefCh,DapiCh),DataChArray);
+RMD = newArray(Ch.length); RMD[0] = "Ref";	RMD[1] = "Mask";
+for (i = 2; i < RMD.length; i++) {
+	RMD[i] = "Data_"+d2s(i-1,0);
+}
 
 
 
@@ -314,6 +304,11 @@ function MEASURE_FUNCTION(rowOffset){
 	return rowOffset;
 }
 
+
+function DataInputToChannelArray(){
+	// make Data input readable my code
+
+}
 
 
 //####### VERSION UPDATES //####### VERSION UPDATES //####### VERSION UPDATES //####### VERSION UPDATES //####### VERSION UPDATES //####### 
