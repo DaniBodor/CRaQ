@@ -42,6 +42,7 @@ Dialog.create("Change parameter settings");
 	Dialog.addNumber("Max Feret's Diameter",7,1,3,"pixels");
 	Dialog.addNumber("Min Centromere Size",4,0,2,"pixel");
 	Dialog.addNumber("Max Centromere Size",35,0,2,"pixel");
+	Dialog.addChoice("Choose Threshold Type for spot recognition", getList("threshold.methods"));
 	Dialog.addNumber("Threshold Factor",1.11,2,4,"pixel intensity");
 	Dialog.addNumber("Pixels are considered saturated at: ",92,0,2,"% of camera saturation");
 	Dialog.addMessage("\nIf known, set the chromatic aberration of the reference channel compared to the data channel.");
@@ -55,7 +56,8 @@ if (Change == 1)
 	MaxFeret=Dialog.getNumber();
 	MinCentro=Dialog.getNumber();
 	MaxCentro=Dialog.getNumber();
-	OtsuUp=Dialog.getNumber();
+	ThreshType=Dialog.getChoice();
+	ThreshFact=Dialog.getNumber();
 	Saturation = Dialog.getNumber() * SatPixVal / 100;
 	xCor=Dialog.getNumber();
 	yCor=Dialog.getNumber();
@@ -131,7 +133,8 @@ function INITIATING_FUNCTION(dir) {
 	print ("Maximum Ferets Diameter: ", MaxFeret);
 	print ("Minimum Centromere Size: ", MinCentro);
 	print ("Maximum Centromere Size: ", MaxCentro);
-	print ("Threshold Factor: ", OtsuUp);
+	print ("Threshold type for spot recognition", ThreshType);
+	print ("Threshold Factor: ", ThreshFact);
 	if (AutoChromAbCorr == 1)	answer="Yes"; else answer="No";
 	print ("Automatic correction of chromatic aberration using MultiStackReg: "+answer);
 	print ("User-defined chromatic aberration correction: ("+xCor+","+yCor+") [(x,y) difference of reference compared to data]");
@@ -258,7 +261,7 @@ function MEASURE_FUNCTION(rowOffset){
 	if(DapiCh != 0)	imageCalculator("AND", "Ref","Mask");
 	run("Invert");
 	if(is("Inverting LUT"))	run("Invert LUT");
-	setAutoThreshold("Default");
+	setAutoThreshold(ThreshType);
 	run("Analyze Particles...", "size="+MinCentro+"-"+MaxCentro+" circularity="+MinCirc+"-1.00 show=Nothing exclude clear");
 
 	for (l=0;l<nResults;l++) {
