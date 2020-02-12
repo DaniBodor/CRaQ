@@ -42,7 +42,8 @@ Dialog.create("Change parameter settings");
 	Dialog.addNumber("Max Feret's Diameter",7,1,3,"pixels");
 	Dialog.addNumber("Min Centromere Size",4,0,2,"pixel");
 	Dialog.addNumber("Max Centromere Size",35,0,2,"pixel");
-	Dialog.addChoice("Choose Threshold Type for spot recognition", getList("threshold.methods"));
+	ThreshTypes = getList("threshold.methods");
+	Dialog.addChoice("Choose Threshold Type for spot recognition", ThreshTypes, ThreshTypes[0]);
 	Dialog.addNumber("Threshold Factor",1.00,2,4,"pixel intensity");
 	Dialog.addNumber("Pixels are considered saturated at: ",92,0,2,"% of camera saturation");
 	Dialog.addMessage("\nIf known, set the chromatic aberration of the reference channel compared to the data channel.");
@@ -58,11 +59,13 @@ if (Change == 1)
 	MaxCentro=Dialog.getNumber();
 	ThreshType=Dialog.getChoice();
 	ThreshFact=Dialog.getNumber();
-	Saturation = Dialog.getNumber() * SatPixVal / 100;
+	SatPercent = Dialog.getNumber();
 	xCor=Dialog.getNumber();
 	yCor=Dialog.getNumber();
 if (MinCirc >= 1)				exit("Minimum circularity was set to" + MinCirc + ".\n Please enter a value between 0 and 1");
 if (MinCentro > MaxCentro)		exit("Minimum centromere size ("+MinCentro+") may not be larger than maximum centromere size ("+MaxCentro+")");
+
+Saturation = floor(SatPercent * SatPixVal / 100);
 
 // Make Data input correlate to channel numbers
 if (parseInt(DataCh) > 99){
