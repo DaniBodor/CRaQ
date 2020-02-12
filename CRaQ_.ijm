@@ -43,7 +43,7 @@ Dialog.create("Change parameter settings");
 	Dialog.addNumber("Min Centromere Size",4,0,2,"pixel");
 	Dialog.addNumber("Max Centromere Size",35,0,2,"pixel");
 	Dialog.addChoice("Choose Threshold Type for spot recognition", getList("threshold.methods"));
-	Dialog.addNumber("Threshold Factor",1.11,2,4,"pixel intensity");
+	Dialog.addNumber("Threshold Factor",1.00,2,4,"pixel intensity");
 	Dialog.addNumber("Pixels are considered saturated at: ",92,0,2,"% of camera saturation");
 	Dialog.addMessage("\nIf known, set the chromatic aberration of the reference channel compared to the data channel.");
 	Dialog.addMessage("If automatic corrections are used, this should be left at (0,0).");
@@ -262,6 +262,8 @@ function MEASURE_FUNCTION(rowOffset){
 	run("Invert");
 	if(is("Inverting LUT"))	run("Invert LUT");
 	setAutoThreshold(ThreshType);
+	getThreshold(minThresh,maxThresh);
+	setThreshold(minThresh,ThreshFact);
 	run("Analyze Particles...", "size="+MinCentro+"-"+MaxCentro+" circularity="+MinCirc+"-1.00 show=Nothing exclude clear");
 
 	for (l=0;l<nResults;l++) {
