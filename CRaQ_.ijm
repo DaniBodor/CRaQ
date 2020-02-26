@@ -37,7 +37,7 @@ SatPixVal = 1;
 for (b = 0; b < CameraBitDepth; b++) SatPixVal *= 2;
 
 Dialog.create("Change parameter settings");
-	Dialog.addNumber("Square size",7,0,0,"pixels");
+	Dialog.addNumber("ROI Size",7,0,0,"pixels");
 	Dialog.addNumber("Minimum Circularity",0.95,2,4,"a.u.");
 	Dialog.addNumber("Max Feret's Diameter",7,1,3,"pixels");
 	Dialog.addNumber("Min Centromere Size",4,0,2,"pixel");
@@ -50,7 +50,7 @@ Dialog.create("Change parameter settings");
 	Dialog.addNumber("Chromatic aberration (vertical): ",0,0,2,"pixels down");
 if (Change == 1) 
 	Dialog.show();		//####################keeps defaults if "Change default" is unchecked
-	SquareSize=Dialog.getNumber();		corner=(SquareSize-1)/2;
+	RoiSize=Dialog.getNumber();		corner=(RoiSize-1)/2;
 	MinCirc=Dialog.getNumber();
 	MaxFeret=Dialog.getNumber();
 	MinCentro=Dialog.getNumber();
@@ -126,7 +126,7 @@ function INITIATING_FUNCTION(dir) {
 	print("Reference Channel: "+RefCh);
 	print("DAPI Channel: "+DapiCh);
 	print("");
-	print ("Square Size: ", SquareSize);
+	print ("ROI Size: ", RoiSize);
 	print ("Minimum Circularity: ", MinCirc);
 	print ("Maximum Ferets Diameter: ", MaxFeret);
 	print ("Minimum Centromere Size: ", MinCentro);
@@ -260,6 +260,8 @@ function MEASURE_FUNCTION(rowOffset){
 	if(is("Inverting LUT"))	run("Invert LUT");
 	setAutoThreshold("Default");
 	run("Analyze Particles...", "size="+MinCentro+"-"+MaxCentro+" circularity="+MinCirc+"-1.00 show=Nothing exclude clear");
+	makeOval	(0,0, RoiSize, RoiSize);
+	getStatistics(TrueOvalArea); 
 
 	for (l=0;l<nResults;l++) {
 		if (getResult("Feret", l)<MaxFeret){
@@ -267,13 +269,13 @@ function MEASURE_FUNCTION(rowOffset){
 			x=round(getResult("XM", l));
 			y=round(getResult("YM", l));
 			cx=x-xCor;cy=y-yCor;		// chromatic aberration correction
-			makeRectangle	(cx-corner, cy-corner, SquareSize, SquareSize);
+			makeOval	(cx-corner, cy-corner, RoiSize, RoiSize);
 			getStatistics(area, no, minRef, no);
-			if (minRef>0 && area==(SquareSize*SquareSize)){
+			if (minRef>0 && area==TrueOvalArea){
 				roiManager("Add");
-				fillRect(cx-corner, cy-corner, SquareSize, SquareSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(minRef>0)"
+				fillOval(cx-corner, cy-corner, RoiSize, RoiSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(minRef>0)"
 				// would be nice to add sth to make it exclude both boxes rather than just the later one
-				// this would be via a new b/w image with boxes (?use roimanager-fill, then dowand and check for size?)
+				// this would be via a new b/w image with boxes (?use roimanager-fill, then doWand and check for size?)
 			}
 		}
 	}
