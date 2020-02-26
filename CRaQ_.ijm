@@ -9,8 +9,8 @@ run("Colors...", "foreground=black background=black selection=green");
 
 choices=newArray("Unprojected DV files: fast acquisition mode","Unprojected DV files: slow acquisition mode","Projected files","TIF files","Deconvolved DVs");
 Dialog.create("Set Channels");
-	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs","1,2,3",3);
-	Dialog.addNumber("Reference channel number",1,0,0,"");
+	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs","1,2",3);
+	Dialog.addNumber("Reference channel number",2,0,0,"");
 	Dialog.addNumber("DAPI channel number",99,0,0,"large number --> last channel");
 	Dialog.addNumber("Total channels",0,0,0," use 0 to auto-detect");
 	Dialog.addMessage("");
@@ -93,7 +93,7 @@ roiManager("reset");
 
 
 dir = getDirectory("Choose Base Directory ");
-outf="_OUTPUT";
+outf="__OUTPUT";
 out=dir+outf+File.separator;
 File.makeDirectory(out);
 
@@ -144,7 +144,7 @@ function INITIATING_FUNCTION(dir) {
 
 	list = getFileList(dir);
 	for (i=0; i<list.length; i++) {
-		if (endsWith(list[i], "/") && indexOf(list[i],outf)<0){
+		if (endsWith(list[i], "/") && indexOf(list[i],outf)<0 && startsWith(list[i], "_") == 0){
 			sdir= dir+list[i];
 			DIRname=substring(list[i],0,lengthOf(list[i])-1);
 			Table.create("DataTable");
