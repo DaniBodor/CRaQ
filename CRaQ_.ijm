@@ -266,14 +266,12 @@ function MEASURE_FUNCTION(rowOffset){
 			selectWindow("Ref");
 			x=round(getResult("XM", l));
 			y=round(getResult("YM", l));
-			cx=x-xCor;cy=y-yCor;
-			makeRectangle(x-corner, y-corner, SquareSize, SquareSize);
+			cx=x-xCor;cy=y-yCor;		// chromatic aberration correction
+			makeRectangle	(cx-corner, cy-corner, SquareSize, SquareSize);
 			getStatistics(area, no, minRef, no);
 			if (minRef>0 && area==(SquareSize*SquareSize)){
-				makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
-				fillRect(cx-corner, cy-corner, SquareSize, SquareSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(min>0)"
-				makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
 				roiManager("Add");
+				fillRect(cx-corner, cy-corner, SquareSize, SquareSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(min>0)"
 			}
 		}
 	}
