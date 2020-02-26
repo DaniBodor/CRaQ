@@ -38,6 +38,7 @@ for (b = 0; b < CameraBitDepth; b++) SatPixVal *= 2;
 
 Dialog.create("Change parameter settings");
 	Dialog.addNumber("ROI Size",7,0,0,"pixels");
+	Dialog.addNumber("Ring Width (for Hoffman corrections)",1,0,0,"pixels");
 	Dialog.addNumber("Minimum Circularity",0.95,2,4,"a.u.");
 	Dialog.addNumber("Max Feret's Diameter",7,1,3,"pixels");
 	Dialog.addNumber("Min Centromere Size",4,0,2,"pixel");
@@ -51,6 +52,7 @@ Dialog.create("Change parameter settings");
 if (Change == 1) 
 	Dialog.show();		//####################keeps defaults if "Change default" is unchecked
 	RoiSize=Dialog.getNumber();		corner=(RoiSize-1)/2;
+	RingWidth=Dialog.getNumber();
 	MinCirc=Dialog.getNumber();
 	MaxFeret=Dialog.getNumber();
 	MinCentro=Dialog.getNumber();
@@ -127,6 +129,7 @@ function INITIATING_FUNCTION(dir) {
 	print("DAPI Channel: "+DapiCh);
 	print("");
 	print ("ROI Size: ", RoiSize);
+	print ("Ring Width (for Hoffman corrections): ", RingWidth);
 	print ("Minimum Circularity: ", MinCirc);
 	print ("Maximum Ferets Diameter: ", MaxFeret);
 	print ("Minimum Centromere Size: ", MinCentro);
@@ -283,6 +286,7 @@ function MEASURE_FUNCTION(rowOffset){
 	
 	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
 		columnName = "Ch" + DataChArray[data_channels];
+		testColName = columnName+"_MaxMin";
 		resArray = newArray(0);
 		selectWindow(RMD[data_channels+2]);
 		selectWindow("DataTable");
@@ -291,12 +295,25 @@ function MEASURE_FUNCTION(rowOffset){
 			Table.set("Image",row, IMname);
 			Table.set("ROI", row, roi+1);
 			roiManager("select", roi);
-			getStatistics(no, DataMean, DataMin, DataMax);
-			spot_value = DataMax - DataMin;
-			if (DataMax > Saturation){
+			getStatistics(DataArea, DataMean, DataMin, DataMax);
+			MaxMin_value = DataMax - DataMin;
+			
+			getSelectionBounds(Rx,Ry,Rw,Rh);
+			makeOval(Rx-RingWidth, Ry-RingWidth, Rw+2*RingWidth, Rh+2*RingWidth);
+			getStatistics(LargeArea, LargeMean, LargeMin, LargeMax);
+			
+			DataIntDens  = DataArea  * DataMean;
+			LargeIntDens = LargeArea * LargeMean;
+			RingArea = LargeArea-DataArea;
+			RingIntDens = LargeIntDens-DataIntDens;
+			RingMean = RingIntDens/RingArea;
+			HoffmanSignal = DataMean - RingMean;
+			
+			if (LargeMax > Saturation){
 				Table.set(columnName, row, "Saturated Pixel");
 			} else {
-				Table.set(columnName, row, spot_value);
+				Table.set(testColName, row, MaxMin_value);
+				Table.set(columnName, row, HoffmanSignal);
 			}
 			
 		}
