@@ -271,7 +271,9 @@ function MEASURE_FUNCTION(rowOffset){
 			getStatistics(area, no, minRef, no);
 			if (minRef>0 && area==(SquareSize*SquareSize)){
 				roiManager("Add");
-				fillRect(cx-corner, cy-corner, SquareSize, SquareSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(min>0)"
+				fillRect(cx-corner, cy-corner, SquareSize, SquareSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(minRef>0)"
+				// would be nice to add sth to make it exclude both boxes rather than just the later one
+				// this would be via a new b/w image with boxes (?use roimanager-fill, then dowand and check for size?)
 			}
 		}
 	}
