@@ -346,3 +346,10 @@ function DataInputToChannelArray(){
 
 //####### VERSION UPDATES //####### VERSION UPDATES //####### VERSION UPDATES //####### VERSION UPDATES //####### VERSION UPDATES //####### 
 // Check github initial commit for version updates from published version
+/*
+v1.3 updates
+- changes relating to default thresholding being dark background or dark forground
+- minor changes to settings dialogs
+
+
+*/
