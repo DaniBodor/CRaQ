@@ -153,7 +153,7 @@ function INITIATING_FUNCTION(dir) {
 
 	list = getFileList(dir);
 	for (i=0; i<list.length; i++) {
-		if (endsWith(list[i], "/") && indexOf(list[i],outf)<0){
+		if (endsWith(list[i], "/") && indexOf(list[i],outf)<0 && !startsWith(list[i], "_") ){
 			sdir= dir+list[i];
 			DIRname=substring(list[i],0,lengthOf(list[i])-1);
 			Table.create("DataTable");
