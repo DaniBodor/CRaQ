@@ -101,7 +101,7 @@ roiManager("reset");
 
 
 dir = getDirectory("Choose Base Directory ");
-outf="_OUTPUT";
+outf="_CRaQ_output";
 out=dir+outf+File.separator;
 File.makeDirectory(out);
 
