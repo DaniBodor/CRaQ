@@ -9,12 +9,14 @@ run("Colors...", "foreground=black background=black selection=green");
 
 choices=newArray("Unprojected DV files: fast acquisition mode","Unprojected DV files: slow acquisition mode","Projected files","TIF files","Deconvolved DVs");
 Dialog.create("Set Channels");
-	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs","1,2,3",3);
-	Dialog.addNumber("Reference channel number",1,0,0,"");
-	Dialog.addNumber("DAPI channel number",99,0,0,"large number --> last channel");
+	Dialog.addString("Data channel number (use commas (,) to separate multiple inputs","1,2,3,4",8);
+	Dialog.addNumber("Reference channel number",4,0,0,"");
+	Dialog.addNumber("DAPI channel number",1,0,0,"large number --> last channel");
 	Dialog.addNumber("Total channels",0,0,0," use 0 to auto-detect");
 	Dialog.addMessage("");
-	Dialog.addNumber("Camera Bitdepth",12,0,0,"usually 12 or 16");
+	Dialog.addNumber("Square size",5,0,0,"pixels");
+	Dialog.addMessage("");
+	Dialog.addNumber("Camera Bitdepth",16,0,0,"usually 12 or 16; used for determining overexposed pixels");
 	Dialog.addMessage("");
 	Dialog.addCheckbox("Chromatic aberration correction using MultiStackReg",1);
 	Dialog.addCheckbox("Change default parameter settings",0);
@@ -26,6 +28,8 @@ Dialog.show();
 	RefCh=Dialog.getNumber();
 	DapiCh=Dialog.getNumber();
 	TotCh=Dialog.getNumber();
+	SquareSize=Dialog.getNumber();
+		corner=(SquareSize-1)/2;
 	CameraBitDepth=Dialog.getNumber();
 	AutoChromAbCorr=Dialog.getCheckbox();
 	Change=Dialog.getCheckbox();
@@ -37,7 +41,7 @@ SatPixVal = 1;
 for (b = 0; b < CameraBitDepth; b++) SatPixVal *= 2;
 
 Dialog.create("Change parameter settings");
-	Dialog.addNumber("Square size",7,0,0,"pixels");
+	
 	Dialog.addNumber("Minimum Circularity",0.95,2,4,"a.u.");
 	Dialog.addNumber("Max Feret's Diameter",7,1,3,"pixels");
 	Dialog.addNumber("Min Centromere Size",4,0,2,"pixel");
@@ -52,7 +56,6 @@ Dialog.create("Change parameter settings");
 	Dialog.addNumber("Chromatic aberration (vertical): ",0,0,2,"pixels down");
 if (Change == 1) 
 	Dialog.show();		//####################keeps defaults if "Change default" is unchecked
-	SquareSize=Dialog.getNumber();		corner=(SquareSize-1)/2;
 	MinCirc=Dialog.getNumber();
 	MaxFeret=Dialog.getNumber();
 	MinCentro=Dialog.getNumber();
@@ -136,7 +139,7 @@ function INITIATING_FUNCTION(dir) {
 	print ("Maximum Ferets Diameter: ", MaxFeret);
 	print ("Minimum Centromere Size: ", MinCentro);
 	print ("Maximum Centromere Size: ", MaxCentro);
-	print ("Threshold type for spot recognition", ThreshType);
+	print ("Threshold type for spot recognition: ", ThreshType);
 	print ("Threshold Factor: ", ThreshFact);
 	if (AutoChromAbCorr == 1)	answer="Yes"; else answer="No";
 	print ("Automatic correction of chromatic aberration using MultiStackReg: "+answer);
@@ -249,14 +252,15 @@ function MEASURE_FUNCTION(rowOffset){
 
 	if( DapiCh != 0 && CroppedCells == 1){
 		selectWindow("Mask");
-		setAutoThreshold("Default");
+		setAutoThreshold("Default dark");
 		getThreshold(AAA,BBB);
-		setThreshold(AAA, BBB*2/3);
+		setThreshold(AAA*2/3, BBB);
 
 		run("Convert to Mask");
+		run("Fill Holes");
 		run("16-bit");
 		run("Multiply...", "value=257.000");
-		run("Invert");
+		//run("Invert");
 	}
 
 	selectWindow("Ref");
@@ -264,11 +268,12 @@ function MEASURE_FUNCTION(rowOffset){
 	if(DapiCh != 0)	imageCalculator("AND", "Ref","Mask");
 	run("Invert");
 	if(is("Inverting LUT"))	run("Invert LUT");
-	setAutoThreshold(ThreshType);
+//waitForUser("test 1 $$$$$$$$$$$$");
+	setAutoThreshold(ThreshType +" dark");
 	getThreshold(minThresh,maxThresh);
-	setThreshold(minThresh,ThreshFact);
+	setThreshold(0 , minThresh * ThreshFact);
 	run("Analyze Particles...", "size="+MinCentro+"-"+MaxCentro+" circularity="+MinCirc+"-1.00 show=Nothing exclude clear");
-
+//waitForUser("test 2 $$$$$$$$$$$$" + minThresh +", " + ThreshFact);
 	for (l=0;l<nResults;l++) {
 		if (getResult("Feret", l)<MaxFeret){
 			selectWindow("Ref");
@@ -286,6 +291,7 @@ function MEASURE_FUNCTION(rowOffset){
 		}
 	}
 	roiNumber = roiManager("count");
+//waitForUser("test 3 $$$$$$$$$$$$\n roi count: "+roiNumber);
 	
 	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
 		columnName = "Ch" + DataChArray[data_channels];
