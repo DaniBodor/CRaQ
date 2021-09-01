@@ -275,7 +275,7 @@ function MEASURE_FUNCTION(rowOffset){
 	getThreshold(minThresh,maxThresh);
 	setThreshold(0 , minThresh * ThreshFact);
 	run("Analyze Particles...", "size="+MinCentro+"-"+MaxCentro+" circularity="+MinCirc+"-1.00 show=Nothing exclude clear");
-//waitForUser("test 2 $$$$$$$$$$$$" + minThresh +", " + ThreshFact);
+//waitForUser("test 2 $$$$$$$$$$$$" + minThresh +", " + ThreshFact);
 	makeOval	(0,0, RoiSize, RoiSize);
 	getStatistics(TrueOvalArea); 
 
