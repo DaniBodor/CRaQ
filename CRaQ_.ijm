@@ -1,5 +1,5 @@
 //####### CRaQ VERSION
-version = "v1.21";
+version = "v1.3";
 //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //####### //#######
 
 
@@ -28,8 +28,8 @@ Dialog.show();
 	RefCh=Dialog.getNumber();
 	DapiCh=Dialog.getNumber();
 	TotCh=Dialog.getNumber();
-	SquareSize=Dialog.getNumber();
-		corner=(SquareSize-1)/2;
+	RoiSize=Dialog.getNumber();
+		corner=(RoiSize-1)/2;
 	CameraBitDepth=Dialog.getNumber();
 	AutoChromAbCorr=Dialog.getCheckbox();
 	Change=Dialog.getCheckbox();
@@ -41,7 +41,7 @@ SatPixVal = 1;
 for (b = 0; b < CameraBitDepth; b++) SatPixVal *= 2;
 
 Dialog.create("Change parameter settings");
-	
+	Dialog.addNumber("Ring Width (for Hoffman corrections)",1,0,0,"pixels");
 	Dialog.addNumber("Minimum Circularity",0.95,2,4,"a.u.");
 	Dialog.addNumber("Max Feret's Diameter",7,1,3,"pixels");
 	Dialog.addNumber("Min Centromere Size",4,0,2,"pixel");
@@ -56,6 +56,7 @@ Dialog.create("Change parameter settings");
 	Dialog.addNumber("Chromatic aberration (vertical): ",0,0,2,"pixels down");
 if (Change == 1) 
 	Dialog.show();		//####################keeps defaults if "Change default" is unchecked
+	RingWidth=Dialog.getNumber();
 	MinCirc=Dialog.getNumber();
 	MaxFeret=Dialog.getNumber();
 	MinCentro=Dialog.getNumber();
@@ -134,7 +135,8 @@ function INITIATING_FUNCTION(dir) {
 	print("Reference Channel: "+RefCh);
 	print("DAPI Channel: "+DapiCh);
 	print("");
-	print ("Square Size: ", SquareSize);
+	print ("ROI Size: ", RoiSize);
+	print ("Ring Width (for Hoffman corrections): ", RingWidth);
 	print ("Minimum Circularity: ", MinCirc);
 	print ("Maximum Ferets Diameter: ", MaxFeret);
 	print ("Minimum Centromere Size: ", MinCentro);
@@ -153,7 +155,7 @@ function INITIATING_FUNCTION(dir) {
 
 	list = getFileList(dir);
 	for (i=0; i<list.length; i++) {
-		if (endsWith(list[i], "/") && indexOf(list[i],outf)<0 && !startsWith(list[i], "_") ){
+		if (endsWith(list[i], "/") && indexOf(list[i],outf)<0 && startsWith(list[i], "_") == 0){
 			sdir= dir+list[i];
 			DIRname=substring(list[i],0,lengthOf(list[i])-1);
 			Table.create("DataTable");
@@ -274,19 +276,22 @@ function MEASURE_FUNCTION(rowOffset){
 	setThreshold(0 , minThresh * ThreshFact);
 	run("Analyze Particles...", "size="+MinCentro+"-"+MaxCentro+" circularity="+MinCirc+"-1.00 show=Nothing exclude clear");
 //waitForUser("test 2 $$$$$$$$$$$$" + minThresh +", " + ThreshFact);
+	makeOval	(0,0, RoiSize, RoiSize);
+	getStatistics(TrueOvalArea); 
+
 	for (l=0;l<nResults;l++) {
 		if (getResult("Feret", l)<MaxFeret){
 			selectWindow("Ref");
 			x=round(getResult("XM", l));
 			y=round(getResult("YM", l));
-			cx=x-xCor;cy=y-yCor;
-			makeRectangle(x-corner, y-corner, SquareSize, SquareSize);
+			cx=x-xCor;cy=y-yCor;		// chromatic aberration correction
+			makeOval	(cx-corner, cy-corner, RoiSize, RoiSize);
 			getStatistics(area, no, minRef, no);
-			if (minRef>0 && area==(SquareSize*SquareSize)){
-				makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
-				fillRect(cx-corner, cy-corner, SquareSize, SquareSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(min>0)"
-				makeRectangle(cx-corner, cy-corner, SquareSize, SquareSize);
+			if (minRef>0 && area==TrueOvalArea){
 				roiManager("Add");
+				fillOval(cx-corner, cy-corner, RoiSize, RoiSize);	//########## puts black box over spots, these are then disregarded in the next cycle due to "if(minRef>0)"
+				// would be nice to add sth to make it exclude both boxes rather than just the later one
+				// this would be via a new b/w image with boxes (?use roimanager-fill, then doWand and check for size?)
 			}
 		}
 	}
@@ -295,6 +300,7 @@ function MEASURE_FUNCTION(rowOffset){
 	
 	for (data_channels = 0; data_channels < DataChArray.length; data_channels++) {
 		columnName = "Ch" + DataChArray[data_channels];
+		testColName = columnName+"_MaxMin";
 		resArray = newArray(0);
 		selectWindow(RMD[data_channels+2]);
 		selectWindow("DataTable");
@@ -303,12 +309,25 @@ function MEASURE_FUNCTION(rowOffset){
 			Table.set("Image",row, IMname);
 			Table.set("ROI", row, roi+1);
 			roiManager("select", roi);
-			getStatistics(no, DataMean, DataMin, DataMax);
-			spot_value = DataMax - DataMin;
-			if (DataMax > Saturation){
+			getStatistics(DataArea, DataMean, DataMin, DataMax);
+			MaxMin_value = DataMax - DataMin;
+			
+			getSelectionBounds(Rx,Ry,Rw,Rh);
+			makeOval(Rx-RingWidth, Ry-RingWidth, Rw+2*RingWidth, Rh+2*RingWidth);
+			getStatistics(LargeArea, LargeMean, LargeMin, LargeMax);
+			
+			DataIntDens  = DataArea  * DataMean;
+			LargeIntDens = LargeArea * LargeMean;
+			RingArea = LargeArea-DataArea;
+			RingIntDens = LargeIntDens-DataIntDens;
+			RingMean = RingIntDens/RingArea;
+			HoffmanSignal = DataMean - RingMean;
+			
+			if (LargeMax > Saturation){
 				Table.set(columnName, row, "Saturated Pixel");
 			} else {
-				Table.set(columnName, row, spot_value);
+				Table.set(testColName, row, MaxMin_value);
+				Table.set(columnName, row, HoffmanSignal);
 			}
 			
 		}
